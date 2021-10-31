@@ -82,3 +82,23 @@ Keep in mind that you get to decide what “mixture” means, so do begin your answe
 
 (Note: this question doesn't really have one right answer. It's more about your style of communicating the results.)*/
 
+SELECT industry, job_seniority, COUNT(job_seniority) AS Mix_Count FROM (
+SELECT ROW_NUMBER() OVER(PARTITION BY co.id ORDER BY co.id , t.touch_scheduled_on) AS RowNum,
+		t.id,
+       t.person_id,
+       t.touch_scheduled_on,
+       t.status, 
+       t.touch_type,
+       p.job_seniority, 
+       co.id AS company_id,
+       co.industry       
+FROM touches t 
+	Inner Join persons p ON p.id = (SELECT p.Id FROM persons p WHERE p.id = t.person_id ORDER BY p.id LIMIT 1)
+	Inner Join companies co ON co.id = (SELECT co.id FROM companies co WHERE co.id = p.company_id AND co.industry != '' ORDER BY co.id LIMIT 1)
+ORDER BY co.id, t.id
+--LIMIT 0,200
+) t
+--WHERE RowNum = 1
+GROUP BY industry, job_seniority
+ORDER BY industry, COUNT(job_seniority) DESC
+LIMIT 0,200
